@@ -39,9 +39,6 @@ async function fetch(done) {
         offset = lastObject.id;
         lastRecordID = data.meta.last_record_id
     }
-    // masterData.meta = {
-    //     last_record_id: lastRecordID
-    // }
     done(masterData);
 }
 
