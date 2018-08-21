@@ -7,9 +7,9 @@ const writeFile = util.promisify(fs.writeFile);
 
 const KERALA_RESCUE_DATA_API = 'https://keralarescue.in/data';
 
-function fetch_data_from_offset(offset) {
-    return new Promise((resolve, reject) => {
-        let url = `${KERALA_RESCUE_DATA_API}?offset=${offset}`;
+function fetch_data_from_offset(offset, api_url) {
+  return new Promise((resolve, reject) => {
+        let url = `${api_url || KERALA_RESCUE_DATA_API}?offset=${offset}`;
         console.log(`GET ${url}`);
         request.get(url, (error, response, body) => {
             if(error) {
@@ -26,14 +26,14 @@ function fetch_data_from_offset(offset) {
     })
 }
 
-async function fetch(done) {
+async function fetch(done, url) {
     let offset = 0;
     let lastRecordID = -1;
     let masterData = []
 
     while(offset !== lastRecordID) {
         console.log(`Offset: ${offset}, lastRecordID: ${lastRecordID}`);
-        let data = await fetch_data_from_offset(offset);
+      let data = await fetch_data_from_offset(offset, url);
         masterData = _.concat(masterData, data.data);
         let lastObject = data.data[data.data.length - 1];
         offset = lastObject.id;
@@ -41,6 +41,8 @@ async function fetch(done) {
     }
     done(masterData);
 }
+
+console.log(process.argv[2])
 
 fetch((data) => {
     writeFile('data_complete.json', JSON.stringify(data))
@@ -50,6 +52,15 @@ fetch((data) => {
     .catch((error) => {
         console.error('Error occurred while exporting data');
     });
-})
+}, process.argv[2])
 
 
+/*
+
+Usage:
+
+node index.js https://keralarescue.in/data #to download request data
+
+node index.js https://keralarescue.in/relief_camps/data #to download relief camp data
+
+*/
